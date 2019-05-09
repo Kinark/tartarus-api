@@ -1,0 +1,46 @@
+{
+   "name": "oceanos-api",
+   "version": "1.0.0",
+   "description": "A dead-simple react/sass boilerplate.",
+   "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "dev": "nodemon ./app/server.js",
+      "start": "nodemon ./app/server.js"
+   },
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/Kinark/oceanos-api.git"
+   },
+   "bugs": {
+      "url": "https://github.com/Kinark/oceanos-api/issues"
+   },
+   "homepage": "https://github.com/Kinark/oceanos-api#readme",
+   "author": "Igor Marcossi",
+   "license": "ISC",
+   "engines": {
+      "node": ">=10.13.0"
+   },
+   "devDependencies": {
+      "eslint": "^5.10.0",
+      "eslint-config-airbnb-base": "^13.1.0",
+      "eslint-import-resolver-alias": "^1.1.2",
+      "eslint-plugin-import": "^2.14.0",
+      "eslint-plugin-node": "^8.0.0",
+      "uri-js": "^4.2.2"
+   },
+   "dependencies": {
+      "bcrypt": "^3.0.2",
+      "body-parser": "^1.18.3",
+      "cookie-parser": "^1.4.3",
+      "dotenv": "^6.2.0",
+      "express": "^4.16.4",
+      "jsonwebtoken": "^8.4.0",
+      "mongoose": "^5.4.0",
+      "nodemon": "^1.18.9",
+      "passport": "^0.4.0",
+      "passport-jwt": "^4.0.0",
+      "socket.io": "^2.2.0",
+      "validator": "^10.9.0",
+      "wavy": "^1.0.4"
+   }
+}

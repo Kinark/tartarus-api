@@ -1,0 +1,21 @@
+{
+  "presets": [
+    ["@babel/preset-env", {
+      "targets": { "node": 7 },
+      "useBuiltIns": "usage"
+    }],
+    "@babel/preset-react"
+  ],
+  "plugins": ["add-module-exports", "react-hot-loader/babel"],
+  "env": {
+    "production": {
+      "presets": ["react-optimize"],
+      "plugins": ["dev-expression"]
+    },
+    "development": {
+      "plugins": [
+        "transform-class-properties"
+      ]
+    }
+  }
+}
