@@ -38,12 +38,6 @@ module.exports = {
          const { _id, rememberMe } = await services.decodeToken(jwt_token)
          console.log(decoded)
          const renewedToken = services.signToken({ _id, rememberMe }, { expiresIn: rememberMe ? '7d' : '24h' })
-         // Set the cookie
-         res.cookie('jwt_token', renewedToken, {
-            expires: rememberMe ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : 0,
-            secure: process.env.NODE_ENV === 'production',
-            httpOnly: true
-         })
          // Send the response
          return res.send({ token: renewedToken })
       } catch (err) {
@@ -70,11 +64,6 @@ module.exports = {
          const hashesMatch = await services.comparePasswords(password, foundUser ? foundUser.password : dumbPassword)
          if (!foundUser || !hashesMatch) return res.status(422).send(responseError('wrong-info', 'Wrong email or password'))
          const token = services.signToken({ _id: foundUser._id, rememberMe }, { expiresIn: rememberMe ? '7d' : '24h' })
-         res.cookie('jwt_token', token, {
-            expires: rememberMe ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : 0,
-            secure: process.env.NODE_ENV === 'production',
-            httpOnly: true
-         })
          return res.send({ token })
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
