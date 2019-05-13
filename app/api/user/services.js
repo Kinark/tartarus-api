@@ -62,7 +62,7 @@ module.exports = {
     */
    decodeToken: async token => {
       try {
-         return await jwt.sign(token, process.env.JWT_SECRET)
+         return await jwt.verify(token, process.env.JWT_SECRET)
       } catch (err) {
          throw new Error('Error while decoding token.')
       }
