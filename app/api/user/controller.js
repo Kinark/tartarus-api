@@ -1,4 +1,5 @@
 const services = require('./services')
+const responseError = require('~/app/responseError')
 
 module.exports = {
    /**
@@ -7,16 +8,16 @@ module.exports = {
     * @param {object} res - res object from express.
     */
    signUp: async ({ body: { email, name, password } }, res) => {
-      if (!email || !password || !name) return res.status(400).send({ msg: 'Missing information.' })
+      if (!email || !password || !name) return res.status(400).send(responseError('missing-info', 'Missing information.'))
       try {
-         if (await services.findUser(email)) return res.status(400).send({ msg: 'Email already exists.' })
+         if (await services.findUser(email)) return res.status(400).send(responseError('already-exists', 'Email already in use.'))
          const newUser = await services.signUpUser(email, name, password)
          const userCopy = Object.assign({}, newUser._doc)
          delete userCopy.password
          res.status(201).send(userCopy)
       } catch (err) {
-         if (err.code === 11000) return res.status(400).send({ msg: 'Email already in use.' })
-         return res.status(400).send({ msg: 'Something went wrong' })
+         if (err.code === 11000) return res.status(400).send(responseError('already-exists', 'Email already in use.'))
+         return res.status(400).send(responseError('something-wrong', 'Something went wrong.'))
       }
    },
 
@@ -33,18 +34,20 @@ module.exports = {
       if (!jwt_token || (email && password)) return next()
 
       try {
-         const decodedToken = await services.decodeToken(jwt_token)
-         const renewedToken = services.signToken({ _id: decodedToken._id, rememberMe: decodedToken.rememberMe }, decodedToken.exp)
+         const decoded = await services.decodeToken(jwt_token)
+         const { _id, rememberMe } = await services.decodeToken(jwt_token)
+         console.log(decoded)
+         const renewedToken = services.signToken({ _id, rememberMe }, { expiresIn: rememberMe ? '7d' : '24h' })
          // Set the cookie
          res.cookie('jwt_token', renewedToken, {
-            expires: decodedToken.rememberMe ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : 0,
+            expires: rememberMe ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : 0,
             secure: process.env.NODE_ENV === 'production',
             httpOnly: true
          })
          // Send the response
          return res.send({ token: renewedToken })
-      } catch (error) {
-         return res.status(422).send({ msg: 'Expired or invalid token.' })
+      } catch (err) {
+         return res.status(422).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
    },
 
@@ -59,13 +62,13 @@ module.exports = {
     * @returns {void}
     */
    login: async ({ body: { email, password, rememberMe } }, res) => {
-      if (!email || !password) return res.status(400).send({ msg: 'Missing email or password.' })
+      if (!email || !password) return res.status(400).send(responseError('missing-info', 'Missing email or password'))
       const dumbPassword = '$2b$10$8JkwIgvmHPI51XPvbzCrJOpiaS.OQ6iPUmnlGrqA9L6jQOSvUiGbW'
-      
+
       try {
          const foundUser = await services.findUser(email)
          const hashesMatch = await services.comparePasswords(password, foundUser ? foundUser.password : dumbPassword)
-         if (!foundUser || !hashesMatch) return res.status(422).send({ msg: 'Wrong email or password.' })
+         if (!foundUser || !hashesMatch) return res.status(422).send(responseError('wrong-info', 'Wrong email or password'))
          const token = services.signToken({ _id: foundUser._id, rememberMe }, { expiresIn: rememberMe ? '7d' : '24h' })
          res.cookie('jwt_token', token, {
             expires: rememberMe ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : 0,
@@ -74,7 +77,7 @@ module.exports = {
          })
          return res.send({ token })
       } catch (err) {
-         return res.status(400).send({ msg: err.message })
+         return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
    },
 
