@@ -29,14 +29,12 @@ module.exports = {
     * @param {object} res - res object from express.
     * @returns {void}
     */
-   jwtRenewer: async ({ cookies: { jwt_token }, body: { email, password } }, res, next) => {
+   jwtRenewer: ({ headers: { authorization }, body: { email, password } }, res, next) => {
       // Check for JWT Token on cookies
-      if (!jwt_token || (email && password)) return next()
+      if (!authorization || (email && password)) return next()
 
       try {
-         const decoded = await services.decodeToken(jwt_token)
-         const { _id, rememberMe } = await services.decodeToken(jwt_token)
-         console.log(decoded)
+         const { _id, rememberMe } = services.decodeToken(authorization)
          const renewedToken = services.signToken({ _id, rememberMe }, { expiresIn: rememberMe ? '7d' : '24h' })
          // Send the response
          return res.send({ token: renewedToken })
