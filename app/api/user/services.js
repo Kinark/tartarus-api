@@ -9,7 +9,7 @@ module.exports = {
     * @param {string} email - User's email
     * @param {string} name - User's name
     * @param {string} password - User's password
-    * @returns {object} - The new user
+    * @returns {Object} - The new user
     */
    signUpUser: async (email, name, password) => {
       const newUser = new User({ email, name, password })
@@ -23,7 +23,7 @@ module.exports = {
    /**
     * Searches for a user with given email
     * @param {string} email - User's email
-    * @returns {object}
+    * @returns {Object}
     */
    findUser: async email => {
       try {
@@ -49,7 +49,7 @@ module.exports = {
 
    /**
     * Signs tokens
-    * @param {object} data - The data to be signed
+    * @param {Object} data - The data to be signed
     * @param {string} expiresIn - When it's going to expire
     * @returns {string} - The token
     */
@@ -58,7 +58,7 @@ module.exports = {
    /**
     * Decodes tokens
     * @param {string} token
-    * @returns {object} - Decoded token
+    * @returns {Object} - Decoded token
     */
    decodeToken: async token => {
       try {
