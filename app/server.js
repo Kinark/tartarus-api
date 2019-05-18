@@ -31,7 +31,6 @@ app.use(function(error, req, res, next) {
       next()
    }
 })
-app.use(require('./api/user/middlewares').reqWithJwt)
 
 //
 // ─── ROUTES ─────────────────────────────────────────────────────────────────────
