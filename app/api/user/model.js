@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const validator = require('validator');
+const mongoose = require('mongoose')
+const bcrypt = require('bcrypt')
+const validator = require('validator')
 
 const UserSchema = new mongoose.Schema({
    email: {
@@ -17,22 +17,24 @@ const UserSchema = new mongoose.Schema({
    },
    password: {
       type: String,
-      required: true,
+      required: true
    },
    lastLogin: {
-      type: Date,
-   }
-});
+      type: Date
+   },
+   createdAt: { type: Date }
+})
 
-UserSchema.pre('save', function (next) {
-   const user = this;
+UserSchema.pre('save', function(next) {
+   const user = this
+   user.createdAt = new Date()
    bcrypt.hash(user.password, 10, (err, hash) => {
-      if (err) return next(err);
-      user.password = hash;
-      next();
+      if (err) return next(err)
+      user.password = hash
+      next()
    })
-});
+})
 
-const User = mongoose.model('User', UserSchema);
+const User = mongoose.model('User', UserSchema)
 
-module.exports = User;
+module.exports = User
