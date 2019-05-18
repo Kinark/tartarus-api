@@ -8,21 +8,30 @@ module.exports = {
     * @param {string} [cover=''] - World's cover image
     * @param {string} password - World's password
     * @param {Array} tags - World's tags
-    * @returns
+    * @returns {object}
     */
-   newWorld: async (owner, name, cover = '', password, tags) => {
-      const newWorld = new World({ owner, name, cover, password, tags })
-      try {
-         return await newWorld.save()
-      } catch (err) {
-         throw new Error(err)
-      }
+   newWorld: (owner, name, cover = '', password, tags) => {
+      const newWorld = new World({ owner, name, cover, password, tags, createdAt: new Date() })
+      return newWorld.save()
    },
-   fetchWorld: async id => {
-      try {
-         return await World.findById(id)
-      } catch (err) {
-         throw new Error('Error while finding world.')
-      }
-   }
+
+   /**
+    * Fetch a world by it's _id
+    * @param {string} _id - The world's _id
+    * @returns {Promise}
+    */
+   fetchWorld: _id => World.findById(_id),
+
+   /**
+    * Fetch a worlds by owner
+    * @param {string} owner - The owner's _id
+    * @returns {Promise}
+    */
+   fetchWorldsByOwner: owner => World.find({ owner }),
+
+   joinWorld: (memberId, worldId) => World.findByIdAndUpdate(worldId, { $push: { friends: memberId } }),
+
+   destroyWorld: worldId => World.findByIdAndDelete(worldId),
+
+   modifyWorld: (worldId, update) => World.findByIdAndUpdate(worldId, update, { new: true, runValidators: true })
 }

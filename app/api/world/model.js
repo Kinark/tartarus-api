@@ -7,15 +7,16 @@ const WorldSchema = new mongoose.Schema({
    cover: { type: String, trim: true },
    members: { type: [String] },
    password: { type: String },
-   creationDate: { type: Date, required: true },
+   createdAt: { type: Date, required: true },
    tags: { type: [String] }
 })
 
 WorldSchema.pre('save', function(next) {
-   const user = this
-   bcrypt.hash(user.password, 10, (err, hash) => {
+   const world = this
+   if(!world.password) next()
+   bcrypt.hash(world.password, 10, (err, hash) => {
       if (err) return next(err)
-      user.password = hash
+      world.password = hash
       next()
    })
 })
