@@ -2,15 +2,15 @@ const services = require('./services')
 const responseError = require('~/app/responseError')
 
 module.exports = {
-   reqWithJwt: (req, res, next) => {
-      req.authToken = false
-      if (!req.cookies.jwt_token) return next()
-      const decoded = services.decodeToken(req.body.jwt)
-      req.authToken = decoded
-      return next()
-   },
-   onlyAuth: (req, res, next) => {
-      if (!req.authToken) return res.status(401).send(responseError('unathorized', 'You must login first.'))
+   authAndDecode: (req, res, next) => {
+      const { token } = req
+      if (!token) return res.status(401).send(responseError('must-login', 'You must login first.'))
+      try {
+         const decoded = services.decodeToken(token)
+         req.token = decoded
+      } catch (error) {
+         return res.status(401).send(responseError('invalid-token', 'Invalid or expired token sent.'))
+      }
       return next()
    }
 }
