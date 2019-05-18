@@ -19,9 +19,6 @@ const UserSchema = new mongoose.Schema({
       type: String,
       required: true
    },
-   lastLogin: {
-      type: Date
-   },
    createdAt: { type: Date }
 })
 
