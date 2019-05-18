@@ -13,11 +13,7 @@ module.exports = {
     */
    signUpUser: async (email, name, password) => {
       const newUser = new User({ email, name, password })
-      try {
-         return await newUser.save()
-      } catch (err) {
-         throw new Error(err)
-      }
+      return newUser.save()
    },
 
    /**
@@ -25,13 +21,7 @@ module.exports = {
     * @param {string} email - User's email
     * @returns {Object}
     */
-   findUser: async email => {
-      try {
-         return await User.findOne({ email })
-      } catch (err) {
-         throw new Error('Error while finding user.')
-      }
-   },
+   findUser: async email => User.findOne({ email }),
 
    /**
     * Compares two passwords
@@ -39,13 +29,7 @@ module.exports = {
     * @param {string} passwordB
     * @returns {boolean}
     */
-   comparePasswords: async (passwordA, passwordB) => {
-      try {
-         return await bcrypt.compare(passwordA, passwordB)
-      } catch (err) {
-         throw new Error('Error while comparing passwords.')
-      }
-   },
+   comparePasswords: async (passwordA, passwordB) => bcrypt.compare(passwordA, passwordB),
 
    /**
     * Signs tokens
@@ -60,11 +44,5 @@ module.exports = {
     * @param {string} token
     * @returns {Object} - Decoded token
     */
-   decodeToken: async token => {
-      try {
-         return await jwt.verify(token, process.env.JWT_SECRET)
-      } catch (err) {
-         throw new Error('Error while decoding token.')
-      }
-   }
+   decodeToken: token => jwt.verify(token, process.env.JWT_SECRET)
 }
