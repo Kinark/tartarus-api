@@ -2,6 +2,7 @@
 var mongoose = module.exports = require('mongoose');
 
 mongoose.set('useCreateIndex', true)
+mongoose.set('useFindAndModify', false)
 
 // Build the connection string 
 var dbURI = process.env.DB_URI;
