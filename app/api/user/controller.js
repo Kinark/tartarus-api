@@ -16,7 +16,6 @@ module.exports = {
          delete userCopy.password
          res.status(201).send(userCopy)
       } catch (err) {
-         if (err.code === 11000) return res.status(400).send(responseError('already-exists', 'Email already in use.'))
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.'))
       }
    },
@@ -29,12 +28,12 @@ module.exports = {
     * @param {object} res - res object from express.
     * @returns {void}
     */
-   jwtRenewer: ({ headers: { authorization }, body: { email, password } }, res, next) => {
+   jwtRenewer: ({ token, body: { email, password } }, res, next) => {
       // Check for JWT Token on cookies
-      if (!authorization || (email && password)) return next()
+      if (!token || (email && password)) return next()
 
       try {
-         const { _id, rememberMe } = services.decodeToken(authorization)
+         const { _id, rememberMe } = services.decodeToken(token)
          const renewedToken = services.signToken({ _id, rememberMe }, { expiresIn: rememberMe ? '7d' : '24h' })
          // Send the response
          return res.send({ token: renewedToken })
