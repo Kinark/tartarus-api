@@ -10,15 +10,8 @@ const UserSchema = new mongoose.Schema({
       trim: true,
       validate: [validator.isEmail, 'Please fill a valid email address']
    },
-   name: {
-      type: String,
-      required: true,
-      trim: true
-   },
-   password: {
-      type: String,
-      required: true
-   },
+   name: { type: String, required: true, trim: true },
+   password: { type: String, required: true },
    createdAt: { type: Date }
 })
 
