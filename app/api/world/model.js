@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 
-const UserSchema = new mongoose.Schema({
+const WorldSchema = new mongoose.Schema({
    owner: { type: String, required: true },
    name: { type: String, required: true, trim: true },
    cover: { type: String, trim: true },
@@ -11,7 +11,7 @@ const UserSchema = new mongoose.Schema({
    tags: { type: [String] }
 })
 
-UserSchema.pre('save', function(next) {
+WorldSchema.pre('save', function(next) {
    const user = this
    bcrypt.hash(user.password, 10, (err, hash) => {
       if (err) return next(err)
@@ -20,6 +20,6 @@ UserSchema.pre('save', function(next) {
    })
 })
 
-const User = mongoose.model('User', UserSchema)
+const World = mongoose.model('World', WorldSchema)
 
-module.exports = User
+module.exports = World
