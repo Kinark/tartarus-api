@@ -7,10 +7,10 @@ module.exports = {
     * @param {object} req - req object from express.
     * @param {object} res - res object from express.
     */
-   createNewWorld: async ({ body: { name, cover, password, tags }, token }, res) => {
+   createNewWorld: async ({ body: { name, cover, password, tags, description }, token }, res) => {
       if (!name) return res.status(400).send(responseError('missing-info', 'Missing information.'))
       try {
-         const newWorld = await services.newWorld(token._id, name, cover, password, tags ? tags.split(' ') : tags)
+         const newWorld = await services.newWorld(token._id, name, description, cover, password, tags ? tags.split(' ') : tags)
          res.status(201).send(newWorld)
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))

@@ -5,6 +5,7 @@ const WorldSchema = new mongoose.Schema({
    owner: { type: String, required: true },
    name: { type: String, required: true, trim: true },
    cover: { type: String, trim: true },
+   description: { type: String, trim: true },
    members: { type: [String] },
    password: { type: String },
    createdAt: { type: Date, required: true },
