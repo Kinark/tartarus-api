@@ -60,7 +60,10 @@ module.exports = {
          const foundUser = await services.findUser(email)
          const hashesMatch = await services.comparePasswords(password, foundUser ? foundUser.password : dumbPassword)
          if (!foundUser || !hashesMatch) return res.status(422).send(responseError('wrong-info', 'Wrong email or password'))
-         const token = services.signToken({ _id: foundUser._id, rememberMe }, { expiresIn: rememberMe ? '7d' : '24h' })
+         const token = services.signToken(
+            { _id: foundUser._id, rememberMe },
+            { expiresIn: process.env.NODE_ENV === 'development' ? '365d' : rememberMe ? '7d' : '24h' }
+         )
          return res.send({ token })
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
