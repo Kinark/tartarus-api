@@ -1,10 +1,9 @@
 require('dotenv').config()
 require('./db')
 
+const responseError = require('./responseError')
 const app = require('express')()
-
 const server = require('http').Server(app)
-// const io = require('socket.io')(server)
 
 //
 // ─── MIDDLEWARES ────────────────────────────────────────────────────────────────
@@ -43,6 +42,34 @@ app.use(require('./api/world/routes'))
 // app.use(require('./api/message/routes'))
 
 app.all('*', (req, res) => res.status(404).send({ msg: 'not found' }))
+
+//
+// ─── SOCKETIO ───────────────────────────────────────────────────────────────────
+//
+
+const io = require('socket.io')(server)
+const worldServices = require('./api/world/services')
+const nsp = io.of('/gateway')
+
+nsp.on('connection', socket => {
+   socket.emit('hello', { message: 'connected!' })
+
+   socket.on('enter-room', async roomId => {
+      if(!await worldServices.fetchWorld(roomId)) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
+      console.log(`The socket ${socket.id} joined the room ${roomId}`)
+      socket.join(roomId)
+   })
+
+   socket.on('leave-room', async roomId => {
+      // if(!await worldServices.fetchWorld()) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
+      console.log(`The socket ${socket.id} left the room ${roomId}`)
+      socket.leave(roomId)
+   })
+
+   socket.on('message', async (room, msg) => {
+      socket.broadcast.to(room).emit('message', msg)
+   })
+})
 
 //
 // ─── INITIALIZATION ─────────────────────────────────────────────────────────────
