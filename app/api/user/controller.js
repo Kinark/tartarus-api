@@ -64,7 +64,7 @@ module.exports = {
             { _id: foundUser._id, rememberMe },
             { expiresIn: process.env.NODE_ENV === 'development' ? '365d' : rememberMe ? '7d' : '24h' }
          )
-         return res.send({ token })
+         return res.send({ token, userId: foundUser._id, username: foundUser.name })
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
