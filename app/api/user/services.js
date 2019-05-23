@@ -21,7 +21,14 @@ module.exports = {
     * @param {string} email - User's email
     * @returns {Object}
     */
-   findUser: async email => User.findOne({ email }),
+   findUser: email => User.findOne({ email }),
+
+   /**
+    * Searches for a user with given id
+    * @param {string} email - User's email
+    * @returns {Object}
+    */
+   findUserById: _id => User.findById(_id),
 
    /**
     * Compares two passwords
