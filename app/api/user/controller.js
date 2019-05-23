@@ -28,15 +28,18 @@ module.exports = {
     * @param {object} res - res object from express.
     * @returns {void}
     */
-   jwtRenewer: ({ token, body: { email, password } }, res, next) => {
+   jwtRenewer: async ({ token, body: { email, password } }, res, next) => {
       // Check for JWT Token on cookies
       if (!token || (email && password)) return next()
 
       try {
          const { _id, rememberMe } = services.decodeToken(token)
+         const foundUser = await services.findUserById(_id)
          const renewedToken = services.signToken({ _id, rememberMe }, { expiresIn: rememberMe ? '7d' : '24h' })
+         const foundUserCopy = Object.assign({}, foundUser._doc)
+         delete foundUserCopy.password
          // Send the response
-         return res.send({ token: renewedToken })
+         return res.send({ token: renewedToken, ...foundUserCopy })
       } catch (err) {
          return res.status(422).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
@@ -64,7 +67,9 @@ module.exports = {
             { _id: foundUser._id, rememberMe },
             { expiresIn: process.env.NODE_ENV === 'development' ? '365d' : rememberMe ? '7d' : '24h' }
          )
-         return res.send({ token, userId: foundUser._id, username: foundUser.name })
+         const foundUserCopy = Object.assign({}, foundUser._doc)
+         delete foundUserCopy.password
+         return res.send({ token, ...foundUserCopy })
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
