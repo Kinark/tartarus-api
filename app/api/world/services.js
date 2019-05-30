@@ -29,7 +29,7 @@ module.exports = {
     */
    fetchWorldsByOwner: owner => World.find({ owner }),
 
-   joinWorld: (memberId, worldId) => World.findByIdAndUpdate(worldId, { $push: { friends: memberId } }),
+   joinWorld: (memberId, worldId) => World.findByIdAndUpdate(worldId, { $push: { members: memberId } }),
 
    destroyWorld: worldId => World.findByIdAndDelete(worldId),
 
