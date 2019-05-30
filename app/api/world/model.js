@@ -8,7 +8,7 @@ const WorldSchema = new mongoose.Schema({
    cover: { type: String, trim: true },
    description: { type: String, trim: true },
    ruleset: { type: ObjectId },
-   members: { type: [String] },
+   members: { type: [ObjectId] },
    password: { type: String },
    createdAt: { type: Date, required: true },
    tags: { type: [String] }
