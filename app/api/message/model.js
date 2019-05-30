@@ -10,7 +10,7 @@ const MessageSchema = new mongoose.Schema({
    author: Author,
    content: { type: String, required: true, trim: true },
    room: { type: String, required: true, trim: true },
-   type: { type: String, required: true, trim: true },
+   type: { type: String, required: true, enum: ['adventure', 'talk'] },
    subRoom: { type: String, trim: true },
    timestamp: { type: Date, required: true },
    nonce: { type: String, required: true },
