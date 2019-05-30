@@ -1,11 +1,13 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const WorldSchema = new mongoose.Schema({
    owner: { type: String, required: true },
    name: { type: String, required: true, trim: true },
    cover: { type: String, trim: true },
    description: { type: String, trim: true },
+   ruleset: { type: ObjectId },
    members: { type: [String] },
    password: { type: String },
    createdAt: { type: Date, required: true },
