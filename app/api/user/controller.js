@@ -88,5 +88,23 @@ module.exports = {
          httpOnly: true
       })
       res.sendStatus(200)
+   },
+
+   /**
+    * Updates a user controller
+    * @param {object} req - req object from express.
+    * @param {object} res - res object from express.
+    */
+   updateUser: async ({ token, body: { ...rest } }, res) => {
+      try {
+         const toBeUpdated = { ...rest }
+         delete toBeUpdated._id
+         delete toBeUpdated.__v
+
+         const modifiedUser = await services.modifyUser(token._id, toBeUpdated)
+         res.status(200).send(modifiedUser)
+      } catch (err) {
+         return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
+      }
    }
 }

@@ -51,5 +51,20 @@ module.exports = {
     * @param {string} token
     * @returns {Object} - Decoded token
     */
-   decodeToken: token => jwt.verify(token, process.env.JWT_SECRET)
+   decodeToken: token => jwt.verify(token, process.env.JWT_SECRET),
+
+   /**
+    * Fetch a user by it's _id
+    * @param {string} _id - The user's _id
+    * @returns {Promise}
+    */
+   fetchUser: _id => User.findById(_id),
+
+   /**
+    * Modifies an user
+    * @param {string} userId - The user's _id
+    * @param {string} update - The update to be made
+    * @returns {Object} - Final user
+    */
+   modifyUser: (userId, update) => User.findByIdAndUpdate(userId, update, { new: true, runValidators: true })
 }

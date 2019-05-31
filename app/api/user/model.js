@@ -12,7 +12,8 @@ const UserSchema = new mongoose.Schema({
    },
    name: { type: String, required: true, trim: true },
    password: { type: String, required: true },
-   createdAt: { type: Date }
+   createdAt: { type: Date },
+   currentSocket: { type: String }
 })
 
 UserSchema.pre('save', function(next) {
