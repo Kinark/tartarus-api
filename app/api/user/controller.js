@@ -10,7 +10,7 @@ module.exports = {
    signUp: async ({ body: { email, name, password } }, res) => {
       if (!email || !password || !name) return res.status(400).send(responseError('missing-info', 'Missing information.'))
       try {
-         if (await services.findUser(email)) return res.status(400).send(responseError('already-exists', 'Email already in use.'))
+         if (await services.findUserByEmail(email)) return res.status(400).send(responseError('already-exists', 'Email already in use.'))
          const newUser = await services.signUpUser(email, name, password)
          const userCopy = Object.assign({}, newUser._doc)
          delete userCopy.password
@@ -60,7 +60,7 @@ module.exports = {
       const dumbPassword = '$2b$10$8JkwIgvmHPI51XPvbzCrJOpiaS.OQ6iPUmnlGrqA9L6jQOSvUiGbW'
 
       try {
-         const foundUser = await services.findUser(email)
+         const foundUser = await services.findUserByEmail(email)
          const hashesMatch = await services.comparePasswords(password, foundUser ? foundUser.password : dumbPassword)
          if (!foundUser || !hashesMatch) return res.status(422).send(responseError('wrong-info', 'Wrong email or password'))
          const token = services.signToken(
