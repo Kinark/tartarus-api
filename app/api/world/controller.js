@@ -53,26 +53,23 @@ module.exports = {
     * @param {object} req - req object from express.
     * @param {object} res - res object from express.
     */
-   updateWorld: async ({ token, body: { _id, name, members, cover, password, tags } }, res) => {
-      if (!_id || (!name && !cover && !password && !tags)) return res.status(400).send(responseError('missing-info', 'Missing information.'))
+   updateWorld: async ({ token, body: { _id, ...rest } }, res) => {
+      if (!_id) return res.status(400).send(responseError('missing-info', 'Missing information.'))
       try {
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
          if (token._id !== foundWorld.owner) return res.status(403).send(responseError('not-owner', 'You are not the owner of the world.'))
 
-         const toBeUpdated = {}
-         if (typeof name !== 'undefined') toBeUpdated.name = name
-         if (typeof cover !== 'undefined') toBeUpdated.cover = cover
-         if (typeof password !== 'undefined') toBeUpdated.password = password
-         if (typeof members !== 'undefined') toBeUpdated.members = members
-         if (typeof tags !== 'undefined') toBeUpdated.tags = tags.split(' ')
-
-         console.log(toBeUpdated)
+         const toBeUpdated = { ...rest }
+         delete toBeUpdated._id
+         delete toBeUpdated.owner
+         delete toBeUpdated.__v
+         if (toBeUpdated.tags) toBeUpdated.tags = toBeUpdated.tags.split(' ')
 
          const modifiedWorld = await services.modifyWorld(_id, toBeUpdated)
          res.status(200).send(modifiedWorld)
       } catch (err) {
-         return res.status(400).send(responseError('something-wrong', 'Something went wrong.'))
+         return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
    },
 
