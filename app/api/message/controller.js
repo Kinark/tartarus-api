@@ -6,7 +6,7 @@ const io = require('~/app/server')
 
 module.exports = {
    createNewMessage: async ({ token, body }, res) => {
-      const { name } = await userServices.findUserById(token._id)
+      const { name, currentSocket } = await userServices.findUserById(token._id)
       const msgObject = {
          ...body,
          author: {
@@ -16,8 +16,14 @@ module.exports = {
          timestamp: Date.now()
       }
       const newMessage = await services.newMessage(msgObject)
-      io.to(msgObject.room).emit('message', newMessage)
-      res.sendStatus(201)
+      
+      if(currentSocket) {
+         io.sockets.connected[currentSocket].broadcast.to(msgObject.room).emit('message', newMessage)
+      } else {
+         io.to(msgObject.room).emit('message', newMessage)
+      }
+      
+      res.status(201).send(newMessage)
    },
    getMessagesOfRoom: async ({ params: { room } }, res) => {
       const messages = await services.fetchByRoom(room)
