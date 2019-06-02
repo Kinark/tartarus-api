@@ -4,6 +4,7 @@ require('./db')
 const responseError = require('./responseError')
 const app = require('express')()
 const server = require('http').Server(app)
+const io = (module.exports = require('socket.io')(server))
 
 //
 // ─── MIDDLEWARES ────────────────────────────────────────────────────────────────
@@ -39,7 +40,7 @@ app.get('/', (req, res) => res.send('Hello World!'))
 
 app.use(require('./api/user/routes'))
 app.use(require('./api/world/routes'))
-// app.use(require('./api/message/routes'))
+app.use(require('./api/message/routes'))
 
 app.all('*', (req, res) => res.status(404).send({ msg: 'not found' }))
 
@@ -47,28 +48,43 @@ app.all('*', (req, res) => res.status(404).send({ msg: 'not found' }))
 // ─── SOCKETIO ───────────────────────────────────────────────────────────────────
 //
 
-const io = require('socket.io')(server)
 const worldServices = require('./api/world/services')
-const nsp = io.of('/gateway')
+// const messageServices = require('./api/message/services')
+const userServices = require('./api/user/services')
 
-nsp.on('connection', socket => {
+io.on('connection', socket => {
    socket.emit('hello', { message: 'connected!' })
 
    socket.on('enter-room', async roomId => {
-      if(!await worldServices.fetchWorld(roomId)) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
+      if (!(await worldServices.fetchWorld(roomId))) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
       console.log(`The socket ${socket.id} joined the room ${roomId}`)
       socket.join(roomId)
    })
 
-   socket.on('leave-room', async roomId => {
+   socket.on('leave-room', roomId => {
       // if(!await worldServices.fetchWorld()) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
       console.log(`The socket ${socket.id} left the room ${roomId}`)
       socket.leave(roomId)
    })
 
-   socket.on('message', async (room, msg) => {
-      socket.broadcast.to(room).emit('message', msg)
+   socket.on('authenticate', async token => {
+      try {
+         const decodedToken = await userServices.decodeToken(token)
+         await userServices.modifyUser(decodedToken._id, { currentSocket: socket.id })
+      } catch (err) {
+         console.log(err.message)
+      }
    })
+
+   socket.on('disconnect', async () => {
+      try {
+         const foundUser = await userServices.findUser({ currentSocket: socket.id })
+         await userServices.modifyUser(foundUser._id, { currentSocket: null })
+      } catch (err) {
+         console.log(err.message)
+      }
+   })
+
 })
 
 //
