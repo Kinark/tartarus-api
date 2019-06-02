@@ -4,8 +4,8 @@
    "description": "A dead-simple react/sass boilerplate.",
    "scripts": {
       "test": "echo \"Error: no test specified\" && exit 1",
-      "dev": "nodemon NODE_ENV=development ./app/server.js",
-      "start": "node NODE_ENV=production ./app/server.js"
+      "dev": "set NODE_ENV=development&& nodemon ./app/server.js",
+      "start": "set NODE_ENV=production&& node ./app/server.js"
    },
    "repository": {
       "type": "git",
