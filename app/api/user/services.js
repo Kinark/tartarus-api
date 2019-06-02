@@ -35,7 +35,7 @@ module.exports = {
     * @param {object} search - Object to search
     * @returns {Object} - The found User
     */
-   findUser: search => User.findById(search),
+   findUser: search => User.findOne(search),
 
    /**
     * Compares two passwords
