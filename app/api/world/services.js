@@ -31,7 +31,10 @@ module.exports = {
 
    joinWorld: (memberId, worldId) => World.findByIdAndUpdate(worldId, { $push: { members: memberId } }),
 
-   destroyWorld: worldId => World.findByIdAndDelete(worldId),
+   destroyWorld: worldId =>
+      World.findByIdAndDelete(worldId, function(err, world) {
+         world.remove()
+      }),
 
    modifyWorld: (worldId, update) => World.findByIdAndUpdate(worldId, update, { new: true, runValidators: true })
 }
