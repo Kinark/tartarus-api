@@ -8,4 +8,8 @@ app.get('/world/:_id', authMiddlewares.authAndDecode, controller.getWorld)
 app.delete('/world', authMiddlewares.authAndDecode, controller.deleteWorld)
 
 app.get('/my-worlds', authMiddlewares.authAndDecode, controller.getMyWorlds)
+
+app.patch('/join-world', authMiddlewares.authAndDecode, controller.joinWorld)
+app.patch('/leave-world', authMiddlewares.authAndDecode, controller.leaveWorld)
+
 // app.get('/world', authMiddlewares.reqWithJwt, controller.getMessages)
