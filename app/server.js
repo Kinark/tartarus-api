@@ -56,15 +56,31 @@ io.on('connection', socket => {
    socket.emit('hello', { message: 'connected!' })
 
    socket.on('enter-room', async roomId => {
-      if (!(await worldServices.fetchWorld(roomId))) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
+      const foundWorld = await worldServices.fetchWorld(roomId)
+      const userId = await userServices.findUser({ currentSocket: socket })._id
+
+      if (!foundWorld) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
+      // console.log(foundWorld)
+      // console.log(foundWorld.members)
+      // console.log(foundWorld.members.includes(userId))
+      // if (!foundWorld.members.includes(userId)) return socket.emit('error', responseError('not-a-member', 'You are not in this world.'))
+
+      await worldServices.modifyWorld(roomId, { $push: { activeMembers: userId } })
+
       console.log(`The socket ${socket.id} joined the room ${roomId}`)
-      socket.join(roomId)
+      return socket.join(roomId)
    })
 
-   socket.on('leave-room', roomId => {
-      // if(!await worldServices.fetchWorld()) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
+   socket.on('leave-room', async roomId => {
+      const foundWorld = await worldServices.fetchWorld(roomId)
+      const userId = await userServices.findUser({ currentSocket: socket })._id
+
+      if (!foundWorld) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
+
+      await worldServices.modifyWorld(roomId, { $pull: { activeMembers: userId } })
+
       console.log(`The socket ${socket.id} left the room ${roomId}`)
-      socket.leave(roomId)
+      return socket.leave(roomId)
    })
 
    socket.on('authenticate', async token => {
@@ -84,7 +100,6 @@ io.on('connection', socket => {
          console.log(err.message)
       }
    })
-
 })
 
 //
