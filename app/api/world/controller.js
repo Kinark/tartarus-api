@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt')
 const services = require('./services')
 const responseError = require('~/app/responseError')
 
@@ -74,7 +75,7 @@ module.exports = {
    },
 
    /**
-    * Fetch my worlds controller
+    * Fetch a world controller
     * @param {object} req - req object from express.
     * @param {object} res - res object from express.
     */
@@ -84,11 +85,59 @@ module.exports = {
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
          const copyWorld = Object.assign({ locked: false }, foundWorld._doc)
-         if (copyWorld.password) copyWorld.locked = true
+         copyWorld.locked = !!copyWorld.password
          delete copyWorld.password
          res.status(200).send(copyWorld)
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.'))
+      }
+   },
+
+   /**
+    * Join a world controller
+    * @param {object} req - req object from express.
+    * @param {object} res - res object from express.
+    */
+   joinWorld: async ({ token, body: { _id, password } }, res) => {
+      if (!_id) return res.status(400).send(responseError('missing-info', 'Missing information.'))
+      try {
+         const foundWorld = await services.fetchWorld(_id)
+         if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
+
+         if (!foundWorld.members.includes(token._id)) {
+            if (foundWorld.password) {
+               if (!password) return res.status(400).send(responseError('missing-password', 'This world is locked and the password is missing.'))
+               const passwordsMatch = await bcrypt.compare(password, foundWorld.password)
+               if (!passwordsMatch) return res.status(422).send(responseError('wrong-password', 'This world is locked and the password is wrong.'))
+            }
+            const toBeUpdated = { $push: { members: token._id } }
+            await services.modifyWorld(_id, toBeUpdated)
+         }
+
+         res.sendStatus(200)
+      } catch (err) {
+         return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
+      }
+   },
+
+   /**
+    * Leave a world controller
+    * @param {object} req - req object from express.
+    * @param {object} res - res object from express.
+    */
+   leaveWorld: async ({ token, body: { _id } }, res) => {
+      if (!_id) return res.status(400).send(responseError('missing-info', 'Missing information.'))
+      try {
+         const foundWorld = await services.fetchWorld(_id)
+         if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
+         if (!foundWorld.members.includes(token._id)) return res.status(400).send(responseError('not-in-world', "You are not in this world."))
+
+         const toBeUpdated = { $pull: { members: token._id } }
+         await services.modifyWorld(_id, toBeUpdated)
+
+         res.sendStatus(200)
+      } catch (err) {
+         return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
    }
 }
