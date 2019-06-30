@@ -11,5 +11,6 @@ app.get('/my-worlds', authMiddlewares.authAndDecode, controller.getMyWorlds)
 
 app.patch('/join-world', authMiddlewares.authAndDecode, controller.joinWorld)
 app.patch('/leave-world', authMiddlewares.authAndDecode, controller.leaveWorld)
+app.post('/search-worlds', authMiddlewares.authAndDecode, controller.searchWorlds)
 
 // app.get('/world', authMiddlewares.reqWithJwt, controller.getMessages)

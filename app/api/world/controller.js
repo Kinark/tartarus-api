@@ -26,7 +26,15 @@ module.exports = {
    getMyWorlds: async ({ token }, res) => {
       try {
          const myWorlds = await services.fetchWorldsByOwner(token._id)
-         res.status(201).send(myWorlds)
+
+         const modifiedMyWorlds = myWorlds.map(world => {
+            const newWorld = { ...world._doc }
+            newWorld.locked = !!newWorld.password
+            delete newWorld.password
+            return newWorld
+         })
+
+         res.status(200).send(modifiedMyWorlds)
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.'))
       }
@@ -104,7 +112,7 @@ module.exports = {
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
 
-         if (!foundWorld.members.includes(token._id)) {
+         if (!foundWorld.members.includes(token._id) && foundWorld.owner !== token._id) {
             if (foundWorld.password) {
                if (!password) return res.status(400).send(responseError('missing-password', 'This world is locked and the password is missing.'))
                const passwordsMatch = await bcrypt.compare(password, foundWorld.password)
@@ -130,12 +138,36 @@ module.exports = {
       try {
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
-         if (!foundWorld.members.includes(token._id)) return res.status(400).send(responseError('not-in-world', "You are not in this world."))
+         if (!foundWorld.members.includes(token._id)) return res.status(400).send(responseError('not-in-world', 'You are not in this world.'))
 
          const toBeUpdated = { $pull: { members: token._id } }
          await services.modifyWorld(_id, toBeUpdated)
 
          res.sendStatus(200)
+      } catch (err) {
+         return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
+      }
+   },
+
+   /**
+    * Search worlds controller
+    * @param {object} req - req object from express.
+    * @param {object} res - res object from express.
+    */
+   searchWorlds: async ({ body: { search = '', skip } }, res) => {
+      try {
+         const foundWorlds = await services.fetchWorlds({ name: RegExp(`^.*${search}.*$`, 'i') }, skip)
+
+         const modifiedFoundWorlds = foundWorlds.map(world => {
+            const newWorld = { ...world._doc }
+            newWorld.locked = !!newWorld.password
+            delete newWorld.password
+            return newWorld
+         })
+
+         console.log(modifiedFoundWorlds)
+
+         res.status(200).send(modifiedFoundWorlds)
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }

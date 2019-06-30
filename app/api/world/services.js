@@ -23,6 +23,13 @@ module.exports = {
    fetchWorld: _id => World.findById(_id),
 
    /**
+    * Search for worlds
+    * @param {string} query - The query for to search the worlds
+    * @returns {Promise}
+    */
+   fetchWorlds: (query, skip = 0) => World.find(query).skip(skip).limit(50),
+
+   /**
     * Fetch a worlds by owner
     * @param {string} owner - The owner's _id
     * @returns {Promise}
