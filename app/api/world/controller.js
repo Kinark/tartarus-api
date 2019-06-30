@@ -29,7 +29,7 @@ module.exports = {
 
          const modifiedMyWorlds = myWorlds.map(world => {
             const newWorld = { ...world._doc }
-            newWorld.locked = !!newWorld.password
+            newWorld.locked = !!newWorld.password && !world.members.includes(token._id)
             delete newWorld.password
             return newWorld
          })
@@ -139,6 +139,7 @@ module.exports = {
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
          if (!foundWorld.members.includes(token._id)) return res.status(400).send(responseError('not-in-world', 'You are not in this world.'))
+         if (token._id === foundWorld.owner.toString()) return res.status(409).send(responseError('owner-cannot-leave', 'You can\'t leave your own world.'))
 
          const toBeUpdated = { $pull: { members: token._id } }
          await services.modifyWorld(_id, toBeUpdated)
@@ -154,18 +155,16 @@ module.exports = {
     * @param {object} req - req object from express.
     * @param {object} res - res object from express.
     */
-   searchWorlds: async ({ body: { search = '', skip } }, res) => {
+   searchWorlds: async ({ token, body: { search = '', skip } }, res) => {
       try {
          const foundWorlds = await services.fetchWorlds({ name: RegExp(`^.*${search}.*$`, 'i') }, skip)
 
          const modifiedFoundWorlds = foundWorlds.map(world => {
             const newWorld = { ...world._doc }
-            newWorld.locked = !!newWorld.password
+            newWorld.locked = !!newWorld.password && !world.members.includes(token._id)
             delete newWorld.password
             return newWorld
          })
-
-         console.log(modifiedFoundWorlds)
 
          res.status(200).send(modifiedFoundWorlds)
       } catch (err) {
