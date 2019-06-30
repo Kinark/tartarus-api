@@ -49,7 +49,7 @@ module.exports = {
       try {
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
-         if (token._id !== foundWorld.owner) return res.status(403).send(responseError('not-owner', 'You are not the owner of the world.'))
+         if (token._id !== foundWorld.owner.toString()) return res.status(403).send(responseError('not-owner', 'You are not the owner of the world.'))
          await services.destroyWorld(_id)
          res.sendStatus(200)
       } catch (err) {
