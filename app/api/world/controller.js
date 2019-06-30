@@ -41,6 +41,28 @@ module.exports = {
    },
 
    /**
+    * Fetch worlds where I live controller
+    * @param {object} req - req object from express.
+    * @param {object} res - res object from express.
+    */
+   getWhereILive: async ({ token }, res) => {
+      try {
+         const worldsWhereILive = await services.fetchWorlds({ owner: { $ne: token._id }, members: token._id })
+
+         const modifiedMyWorlds = worldsWhereILive.map(world => {
+            const newWorld = { ...world._doc }
+            newWorld.locked = !!newWorld.password && !world.members.includes(token._id)
+            delete newWorld.password
+            return newWorld
+         })
+
+         res.status(200).send(modifiedMyWorlds)
+      } catch (err) {
+         return res.status(400).send(responseError('something-wrong', 'Something went wrong.'))
+      }
+   },
+
+   /**
     * Deletes a world controller
     * @param {object} req - req object from express.
     * @param {object} res - res object from express.
@@ -139,7 +161,7 @@ module.exports = {
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
          if (!foundWorld.members.includes(token._id)) return res.status(400).send(responseError('not-in-world', 'You are not in this world.'))
-         if (token._id === foundWorld.owner.toString()) return res.status(409).send(responseError('owner-cannot-leave', 'You can\'t leave your own world.'))
+         if (token._id === foundWorld.owner.toString()) return res.status(409).send(responseError('owner-cannot-leave', "You can't leave your own world."))
 
          const toBeUpdated = { $pull: { members: token._id } }
          await services.modifyWorld(_id, toBeUpdated)
