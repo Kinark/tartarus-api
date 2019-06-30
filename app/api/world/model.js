@@ -5,7 +5,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId
 const Message = require('../message/model')
 
 const WorldSchema = new mongoose.Schema({
-   owner: { type: String, required: true },
+   owner: { type: ObjectId, required: true },
    name: { type: String, required: true, trim: true },
    cover: { type: String, trim: true },
    description: { type: String, trim: true },
