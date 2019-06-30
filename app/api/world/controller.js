@@ -109,13 +109,13 @@ module.exports = {
     * @param {object} req - req object from express.
     * @param {object} res - res object from express.
     */
-   getWorld: async ({ params: { _id } }, res) => {
+   getWorld: async ({token, params: { _id } }, res) => {
       try {
          if (!_id) return res.status(400).send(responseError('missing-info', 'Missing information.'))
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
          const copyWorld = Object.assign({ locked: false }, foundWorld._doc)
-         copyWorld.locked = !!copyWorld.password
+         copyWorld.locked = !!copyWorld.password && !copyWorld.members.includes(token._id)
          delete copyWorld.password
          res.status(200).send(copyWorld)
       } catch (err) {
