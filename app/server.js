@@ -59,11 +59,8 @@ io.on('connection', socket => {
       const foundWorld = await worldServices.fetchWorld(roomId)
       const userId = await userServices.findUser({ currentSocket: socket })._id
 
-      if (!foundWorld) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
-      // console.log(foundWorld)
-      // console.log(foundWorld.members)
-      // console.log(foundWorld.members.includes(userId))
-      // if (!foundWorld.members.includes(userId)) return socket.emit('error', responseError('not-a-member', 'You are not in this world.'))
+      if (!foundWorld) return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))
+      if (!foundWorld.members.includes(userId)) return socket.emit('oops', responseError('not-a-member', 'You are not in this world.'))
 
       await worldServices.modifyWorld(roomId, { $push: { activeMembers: userId } })
 
@@ -75,7 +72,7 @@ io.on('connection', socket => {
       const foundWorld = await worldServices.fetchWorld(roomId)
       const userId = await userServices.findUser({ currentSocket: socket })._id
 
-      if (!foundWorld) return socket.emit('error', responseError('world-not-found', 'The world was not found.'))
+      if (!foundWorld) return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))
 
       await worldServices.modifyWorld(roomId, { $pull: { activeMembers: userId } })
 
