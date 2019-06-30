@@ -16,4 +16,5 @@ Para rodar o projeto em seu computador, siga os passos abaixo:
 2. Crie e preencha o arquivo `.env` na raiz do projeto seguindo o template contido no arquivo `.env.example`;
 3. Instale as dependências com `npm install`;
 4. Inicie a API localmente com `npm run dev`;
-5. Pronto, a API já está disponível em http://localhost:3000
+5. A API já está disponível em http://localhost:3000;
+6. (opcional) Instale e rode a plataforma (front-end) através [deste repositório](https://github.com/Kinark/tartarus).
