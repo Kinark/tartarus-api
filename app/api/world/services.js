@@ -11,7 +11,7 @@ module.exports = {
     * @returns {object}
     */
    newWorld: ({ owner, name, ruleset = null, description, cover = '', password, tags }) => {
-      const newWorld = new World({ owner, name, description, ruleset, cover, password, tags, createdAt: new Date() })
+      const newWorld = new World({ owner, name, description, ruleset, members: [owner], cover, password, tags, createdAt: new Date() })
       return newWorld.save()
    },
 
