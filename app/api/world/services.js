@@ -10,8 +10,8 @@ module.exports = {
     * @param {Array} tags - World's tags
     * @returns {object}
     */
-   newWorld: ({ owner, name, ruleset, description, cover, password, tags }) => {
-      const newWorld = new World({ owner, name, description, ruleset: ruleset || null, cover: cover || '', password, tags, createdAt: new Date() })
+   newWorld: ({ owner, name, ruleset = null, description, cover = '', password, tags }) => {
+      const newWorld = new World({ owner, name, description, ruleset, cover, password, tags, createdAt: new Date() })
       return newWorld.save()
    },
 
