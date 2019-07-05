@@ -4,7 +4,7 @@
    "description": "A dead-simple react/sass boilerplate.",
    "scripts": {
       "test": "echo \"Error: no test specified\" && exit 1",
-      "dev": "set NODE_ENV=development&& nodemon --signal SIGTERM ./app/server.js",
+      "dev": "set NODE_ENV=development&& nodemon ./app/server.js",
       "start": "set NODE_ENV=production&& node ./app/server.js"
    },
    "repository": {
