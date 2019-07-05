@@ -33,7 +33,8 @@ module.exports = {
       'import/export': 2,
       'node/no-extraneous-require': ['error', {
          allowModules: ['~']
-      }]
+      }],
+      'no-process-exit': 'off'
    },
    plugins: [
       'import'
