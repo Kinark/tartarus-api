@@ -4,7 +4,7 @@
    "description": "A dead-simple react/sass boilerplate.",
    "scripts": {
       "test": "echo \"Error: no test specified\" && exit 1",
-      "dev": "set NODE_ENV=development&& nodemon ./app/server.js",
+      "dev": "set NODE_ENV=development&& nodemon --signal SIGTERM ./app/server.js",
       "start": "set NODE_ENV=production&& node ./app/server.js"
    },
    "repository": {
@@ -38,7 +38,7 @@
       "express-bearer-token": "^2.4.0",
       "jsonwebtoken": "^8.4.0",
       "mongoose": "^5.4.0",
-      "nodemon": "^1.18.9",
+      "nodemon": "^1.19.1",
       "passport": "^0.4.0",
       "passport-jwt": "^4.0.0",
       "socket.io": "^2.2.0",
