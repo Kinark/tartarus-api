@@ -73,5 +73,13 @@ module.exports = {
     * @param {string} update - The update to be made
     * @returns {Object} - Final user
     */
-   modifyUser: (userId, update) => User.findByIdAndUpdate(userId, update, { new: true, runValidators: true })
+   modifyUser: (userId, update) => User.findByIdAndUpdate(userId, update, { new: true, runValidators: true }),
+
+   /**
+    * Modifies multiple users
+    * @param {string} filter - The users filter
+    * @param {string} update - The update to be made
+    * @returns {Object} - Final user
+    */
+   modifyUsers: (filter, update) => User.updateMany(filter, update)
 }

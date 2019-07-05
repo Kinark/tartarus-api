@@ -1,6 +1,6 @@
 const services = require('./services')
 const userServices = require('../user/services')
-const io = require('~/app/server')
+const io = require('~/app/server').io
 // const worldServices = require('../world/services')
 // const responseError = require('~/app/responseError')
 

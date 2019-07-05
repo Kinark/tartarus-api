@@ -1,10 +1,10 @@
 require('dotenv').config()
-require('./db')
+const db = require('./db')
 
 const responseError = require('./responseError')
 const app = require('express')()
 const server = require('http').Server(app)
-const io = (module.exports = require('socket.io')(server))
+const io = (module.exports.io = require('socket.io')(server))
 
 //
 // ─── MIDDLEWARES ────────────────────────────────────────────────────────────────
@@ -53,16 +53,20 @@ const worldServices = require('./api/world/services')
 const userServices = require('./api/user/services')
 
 io.on('connection', socket => {
+   console.log(`The socket ${socket.id} connected`)
    socket.emit('hello', { message: 'connected!' })
 
    socket.on('enter-room', async roomId => {
       const foundWorld = await worldServices.fetchWorld(roomId)
-      const userId = await userServices.findUser({ currentSocket: socket })._id
+      const userId = await userServices.findUser({ currentSocket: socket.id })._id
 
-      if (!foundWorld) return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))
-      if (!foundWorld.members.includes(userId)) return socket.emit('oops', responseError('not-a-member', 'You are not in this world.'))
+      // if (!foundWorld) {return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))}
+      if (!foundWorld) console.log(responseError('world-not-found', 'The world was not found.'))
+      // if (!foundWorld.members.includes(userId)) return socket.emit('oops', responseError('not-a-member', 'You are not in this world.'))
+      if (!foundWorld.members.includes(userId)) console.log('oops', responseError('not-a-member', 'You are not in this world.'))
 
-      await worldServices.modifyWorld(roomId, { $push: { activeMembers: userId } })
+      console.log(userId)
+      if(userId) await worldServices.modifyWorld(roomId, { $push: { activeMembers: userId } })
 
       console.log(`The socket ${socket.id} joined the room ${roomId}`)
       return socket.join(roomId)
@@ -70,7 +74,7 @@ io.on('connection', socket => {
 
    socket.on('leave-room', async roomId => {
       const foundWorld = await worldServices.fetchWorld(roomId)
-      const userId = await userServices.findUser({ currentSocket: socket })._id
+      const userId = await userServices.findUser({ currentSocket: socket.id })._id
 
       if (!foundWorld) return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))
 
@@ -105,3 +109,28 @@ io.on('connection', socket => {
 
 const port = 3000
 server.listen(port, () => console.log(`Example app listening on port ${port}!`))
+
+//
+// ─── SHUTDOWN TASK ─────────────────────────────────────────────────────────────
+//
+
+const disconnectEveryoneFromEverything = require('./tasks/disconnectEveryoneFromEverything')
+
+const shutDown = async () => {
+   await disconnectEveryoneFromEverything()
+   console.log('Received kill signal, shutting down gracefully');
+   server.close(() => {
+       console.log('Closed out remaining connections');
+   });
+   db.connection.close(function () {
+      console.log('Mongoose default connection disconnected through app termination');
+   });
+
+   // setTimeout(() => {
+   //     console.error('Could not close connections in time, forcefully shutting down');
+   //     throw new Error(0)
+   // }, 10000);
+}
+
+process.on('SIGTERM', shutDown);
+process.on('SIGINT', shutDown);

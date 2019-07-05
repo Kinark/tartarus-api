@@ -46,7 +46,5 @@ module.exports = {
          world.remove()
       }),
 
-   modifyWorld: (worldId, update) => World.findByIdAndUpdate(worldId, update, { new: true, runValidators: true }),
-
-   modifyWorlds: (filter, update) => World.updateMany(filter, update)
+   modifyWorld: (worldId, update) => World.findByIdAndUpdate(worldId, update, { new: true, runValidators: true })
 }
