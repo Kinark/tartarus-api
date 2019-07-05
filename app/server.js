@@ -94,6 +94,7 @@ io.on('connection', socket => {
    })
 
    socket.on('disconnect', async () => {
+      console.log(`The socket ${socket.id} disconnected`)
       try {
          const foundUser = await userServices.findUser({ currentSocket: socket.id })
          await userServices.modifyUser(foundUser._id, { currentSocket: null })
@@ -131,7 +132,7 @@ const gracefulShutdown = async cb => {
    //    throw new Error(0)
    // }, 10000)
 
-   if (cb) cb()
+   if (typeof cb === 'function') cb()
    process.exit(0)
 }
 
