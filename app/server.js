@@ -66,7 +66,7 @@ io.on('connection', socket => {
       if (!foundWorld.members.includes(userId)) console.log('oops', responseError('not-a-member', 'You are not in this world.'))
 
       console.log(userId)
-      if(userId) await worldServices.modifyWorld(roomId, { $push: { activeMembers: userId } })
+      if (userId) await worldServices.modifyWorld(roomId, { $push: { activeMembers: userId } })
 
       console.log(`The socket ${socket.id} joined the room ${roomId}`)
       return socket.join(roomId)
@@ -116,21 +116,29 @@ server.listen(port, () => console.log(`Example app listening on port ${port}!`))
 
 const disconnectEveryoneFromEverything = require('./tasks/disconnectEveryoneFromEverything')
 
-const shutDown = async () => {
+const gracefulShutdown = async cb => {
+   console.log('Received kill signal, shutting down gracefully')
    await disconnectEveryoneFromEverything()
-   console.log('Received kill signal, shutting down gracefully');
    server.close(() => {
-       console.log('Closed out remaining connections');
-   });
-   db.connection.close(function () {
-      console.log('Mongoose default connection disconnected through app termination');
-   });
+      console.log('Closed out remaining connections')
+   })
+   db.connection.close(function() {
+      console.log('Mongoose default connection disconnected through app termination')
+   })
 
    // setTimeout(() => {
-   //     console.error('Could not close connections in time, forcefully shutting down');
-   //     throw new Error(0)
-   // }, 10000);
+   //    console.error('Could not close connections in time, forcefully shutting down')
+   //    throw new Error(0)
+   // }, 10000)
+
+   if (cb) cb()
+   process.exit(0)
 }
 
-process.on('SIGTERM', shutDown);
-process.on('SIGINT', shutDown);
+process.once('SIGUSR2', () => {
+   gracefulShutdown(() => {
+      process.kill(process.pid, 'SIGUSR2')
+   })
+})
+process.on('SIGTERM', gracefulShutdown)
+process.on('SIGINT', gracefulShutdown)
