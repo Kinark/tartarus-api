@@ -27,10 +27,10 @@ module.exports = {
     * @param {string} query - The query for to search the worlds
     * @returns {Promise}
     */
-   fetchWorlds: (query, skip = 0) =>
+   fetchWorlds: (query, skip = 0, limit = 50) =>
       World.find(query)
          .skip(skip)
-         .limit(50),
+         .limit(limit),
 
    /**
     * Fetch a worlds by owner
