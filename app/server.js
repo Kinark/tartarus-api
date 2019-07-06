@@ -56,17 +56,30 @@ io.on('connection', socket => {
    console.log(`The socket ${socket.id} connected`)
    socket.emit('hello', { message: 'connected!' })
 
+   socket.on('authenticate', async (token, cb) => {
+      try {
+         const decodedToken = await userServices.decodeToken(token)
+         await userServices.modifyUser(decodedToken._id, { currentSocket: socket.id })
+         cb(true)
+         console.log(`User ${decodedToken._id} authenticated and updated with socket ${socket.id}`)
+      } catch (err) {
+         console.log(err.message)
+      }
+   })
+
    socket.on('enter-room', async roomId => {
       const foundWorld = await worldServices.fetchWorld(roomId)
-      const userId = await userServices.findUser({ currentSocket: socket.id })._id
+      const user = await userServices.findUser({ currentSocket: socket.id })
+      const userId = user._id
 
       // if (!foundWorld) {return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))}
       if (!foundWorld) console.log(responseError('world-not-found', 'The world was not found.'))
       // if (!foundWorld.members.includes(userId)) return socket.emit('oops', responseError('not-a-member', 'You are not in this world.'))
       if (!foundWorld.members.includes(userId)) console.log('oops', responseError('not-a-member', 'You are not in this world.'))
 
-      console.log(userId)
       if (userId) await worldServices.modifyWorld(roomId, { $push: { activeMembers: userId } })
+
+      socket.broadcast.to(roomId).emit('joining-user', user)
 
       console.log(`The socket ${socket.id} joined the room ${roomId}`)
       return socket.join(roomId)
@@ -80,17 +93,10 @@ io.on('connection', socket => {
 
       await worldServices.modifyWorld(roomId, { $pull: { activeMembers: userId } })
 
+      socket.broadcast.to(roomId).emit('leaving-user', userId)
+
       console.log(`The socket ${socket.id} left the room ${roomId}`)
       return socket.leave(roomId)
-   })
-
-   socket.on('authenticate', async token => {
-      try {
-         const decodedToken = await userServices.decodeToken(token)
-         await userServices.modifyUser(decodedToken._id, { currentSocket: socket.id })
-      } catch (err) {
-         console.log(err.message)
-      }
    })
 
    socket.on('disconnect', async () => {
