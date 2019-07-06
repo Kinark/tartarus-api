@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt')
 const services = require('./services')
+const userServices = require('../user/services')
 const responseError = require('~/app/responseError')
 
 module.exports = {
@@ -109,7 +110,7 @@ module.exports = {
     * @param {object} req - req object from express.
     * @param {object} res - res object from express.
     */
-   getWorld: async ({token, params: { _id } }, res) => {
+   getWorld: async ({ token, params: { _id } }, res) => {
       try {
          if (!_id) return res.status(400).send(responseError('missing-info', 'Missing information.'))
          const foundWorld = await services.fetchWorld(_id)
@@ -120,6 +121,38 @@ module.exports = {
          res.status(200).send(copyWorld)
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.'))
+      }
+   },
+
+   /**
+    * Join a world controller
+    * @param {object} req - req object from express.
+    * @param {object} res - res object from express.
+    */
+   getActiveMembersFromWorld: async ({ token, params: { _id } }, res) => {
+      if (!_id) return res.status(400).send(responseError('missing-info', 'Missing information.'))
+      try {
+         const foundWorld = await services.fetchWorld(_id)
+         if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
+
+         if (!foundWorld.members.includes(token._id) && foundWorld.owner !== token._id) {
+            return res.status(403).send(responseError('not-in-world', 'You are not in this world.'))
+         }
+
+         if (foundWorld.activeMembers.length === 0) return res.status(200).send([])
+
+         const users = await userServices.findUsers({ _id: { $in: foundWorld.activeMembers } })
+
+         const privateUsers = users.map(user => {
+            const privateUser = Object.assign({}, user._doc)
+            delete privateUser.password
+            privateUser.room = _id
+            return privateUser
+         })
+
+         res.status(200).send(privateUsers)
+      } catch (err) {
+         return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
    },
 
