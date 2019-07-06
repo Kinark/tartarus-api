@@ -113,8 +113,15 @@ io.on('connection', socket => {
       console.log(`The socket ${socket.id} disconnected`)
       try {
          const foundUser = await userServices.findUser({ currentSocket: socket.id })
+         const worldsUserIsIn = await worldServices.fetchWorlds({ activeMembers: foundUser._id }, 0, 1000)
+
          await userServices.modifyUser(foundUser._id, { currentSocket: null })
          await worldServices.modifyWorlds({ activeMembers: foundUser._id }, { $pull: { activeMembers: foundUser._id } })
+
+         worldsUserIsIn.forEach(world => {
+            socket.broadcast.to(world._id).emit('leaving-player', foundUser._id)
+         });
+         
       } catch (err) {
          console.log(err.message)
       }
