@@ -146,6 +146,7 @@ module.exports = {
          const privateUsers = users.map(user => {
             const privateUser = Object.assign({}, user._doc)
             delete privateUser.password
+            delete privateUser.email
             privateUser.room = _id
             return privateUser
          })

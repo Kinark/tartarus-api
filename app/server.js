@@ -81,6 +81,7 @@ io.on('connection', socket => {
 
       const privateUser = Object.assign({}, user._doc)
       delete privateUser.password
+      delete privateUser.email
       privateUser.room = roomId
 
       socket.broadcast.to(roomId).emit('joining-user', privateUser)
