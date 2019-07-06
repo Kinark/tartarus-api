@@ -84,7 +84,7 @@ io.on('connection', socket => {
       delete privateUser.email
       privateUser.room = roomId
 
-      socket.broadcast.to(roomId).emit('joining-user', privateUser)
+      socket.broadcast.to(roomId).emit('joining-player', privateUser)
 
       console.log(`The socket ${socket.id} joined the room ${roomId}`)
       return socket.join(roomId)
@@ -100,7 +100,7 @@ io.on('connection', socket => {
 
          await worldServices.modifyWorld(roomId, { $pull: { activeMembers: userId } })
 
-         socket.broadcast.to(roomId).emit('leaving-user', userId)
+         socket.broadcast.to(roomId).emit('leaving-player', userId)
 
          console.log(`The socket ${socket.id} left the room ${roomId}`)
          return socket.leave(roomId)
