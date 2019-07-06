@@ -73,30 +73,39 @@ io.on('connection', socket => {
       const userId = user._id
 
       // if (!foundWorld) {return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))}
-      if (!foundWorld) console.log(responseError('world-not-found', 'The world was not found.'))
+      if (!foundWorld) return console.log(responseError('world-not-found', 'The world was not found.'))
       // if (!foundWorld.members.includes(userId)) return socket.emit('oops', responseError('not-a-member', 'You are not in this world.'))
-      if (!foundWorld.members.includes(userId)) console.log('oops', responseError('not-a-member', 'You are not in this world.'))
+      if (!foundWorld.members.includes(userId)) return console.log('oops', responseError('not-a-member', 'You are not in this world.'))
 
-      if (userId) await worldServices.modifyWorld(roomId, { $push: { activeMembers: userId } })
+      await worldServices.modifyWorld(roomId, { $push: { activeMembers: userId } })
 
-      socket.broadcast.to(roomId).emit('joining-user', user)
+      const privateUser = Object.assign({}, user._doc)
+      delete privateUser.password
+      privateUser.room = roomId
+
+      socket.broadcast.to(roomId).emit('joining-user', privateUser)
 
       console.log(`The socket ${socket.id} joined the room ${roomId}`)
       return socket.join(roomId)
    })
 
    socket.on('leave-room', async roomId => {
-      const foundWorld = await worldServices.fetchWorld(roomId)
-      const userId = await userServices.findUser({ currentSocket: socket.id })._id
+      try {
+         const foundWorld = await worldServices.fetchWorld(roomId)
+         const user = await userServices.findUser({ currentSocket: socket.id })
+         const userId = user._id
 
-      if (!foundWorld) return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))
+         if (!foundWorld) return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))
 
-      await worldServices.modifyWorld(roomId, { $pull: { activeMembers: userId } })
+         await worldServices.modifyWorld(roomId, { $pull: { activeMembers: userId } })
 
-      socket.broadcast.to(roomId).emit('leaving-user', userId)
+         socket.broadcast.to(roomId).emit('leaving-user', userId)
 
-      console.log(`The socket ${socket.id} left the room ${roomId}`)
-      return socket.leave(roomId)
+         console.log(`The socket ${socket.id} left the room ${roomId}`)
+         return socket.leave(roomId)
+      } catch (error) {
+         console.log(error)
+      }
    })
 
    socket.on('disconnect', async () => {
@@ -104,6 +113,7 @@ io.on('connection', socket => {
       try {
          const foundUser = await userServices.findUser({ currentSocket: socket.id })
          await userServices.modifyUser(foundUser._id, { currentSocket: null })
+         await worldServices.modifyWorlds({ activeMembers: foundUser._id }, { $pull: { activeMembers: foundUser._id } })
       } catch (err) {
          console.log(err.message)
       }
