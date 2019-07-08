@@ -6,13 +6,10 @@ const io = require('~/app/server').io
 
 module.exports = {
    createNewMessage: async ({ token, body }, res) => {
-      const { name, currentSocket } = await userServices.findUserById(token._id)
+      const { currentSocket } = await userServices.findUserById(token._id)
       const msgObject = {
          ...body,
-         author: {
-            username: name,
-            _id: token._id
-         },
+         author: token._id,
          timestamp: Date.now()
       }
       const newMessage = await services.newMessage(msgObject)
