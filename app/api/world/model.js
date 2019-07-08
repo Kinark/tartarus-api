@@ -5,13 +5,13 @@ const ObjectId = mongoose.Schema.Types.ObjectId
 const Message = require('../message/model')
 
 const WorldSchema = new mongoose.Schema({
-   owner: { type: ObjectId, required: true },
+   owner: { type: ObjectId, required: true, ref: 'User' },
    name: { type: String, required: true, trim: true },
    cover: { type: String, trim: true },
    description: { type: String, trim: true },
-   ruleset: { type: ObjectId },
-   members: { type: [ObjectId] },
-   activeMembers: { type: [ObjectId] },
+   ruleset: { type: ObjectId, ref: 'Ruleset' },
+   members: { type: [ObjectId], ref: 'User' },
+   activeMembers: { type: [ObjectId], ref: 'User' },
    password: { type: String },
    createdAt: { type: Date, required: true },
    tags: { type: [String] }
