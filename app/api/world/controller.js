@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt')
 const services = require('./services')
-const userServices = require('../user/services')
 const responseError = require('~/app/responseError')
 
 module.exports = {
@@ -139,19 +138,14 @@ module.exports = {
             return res.status(403).send(responseError('not-in-world', 'You are not in this world.'))
          }
 
-         if (foundWorld.activeMembers.length === 0) return res.status(200).send([])
+         let { activeMembers } = await services.fetchActiveMembers(_id)
 
-         const users = await userServices.findUsers({ _id: { $in: foundWorld.activeMembers } })
-
-         const privateUsers = users.map(user => {
-            const privateUser = Object.assign({}, user._doc)
-            delete privateUser.password
-            delete privateUser.email
-            privateUser.room = _id
-            return privateUser
+         activeMembers = activeMembers.map(member => {
+            member.room = _id
+            return member
          })
 
-         res.status(200).send(privateUsers)
+         res.status(200).send(activeMembers)
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
