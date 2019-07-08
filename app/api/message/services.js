@@ -1,9 +1,10 @@
 const Message = require('./model')
 
 module.exports = {
-   newMessage: ({ author, content, room, type, subRoom, timestamp, nonce }) => {
+   newMessage: async ({ author, content, room, type, subRoom, timestamp, nonce }) => {
       const newMessage = new Message({ author, content, room, type, subRoom, timestamp, nonce })
-      return newMessage.save()
+      const savedMessage = await newMessage.save()
+      return Message.populate(savedMessage, { path: 'author', select: 'name' })
    },
 
    fetchByRoom: room => Message.find({ room }).populate('author', 'name')
