@@ -37,8 +37,7 @@ module.exports = {
          if (!decodedToken) return res.status(401).send(responseError('invalid-token', 'Invalid or expired token'))
          const { _id, rememberMe } = decodedToken
          const foundUser = await services.findUserById(_id)
-         const renewedToken = services.signToken({ _id, rememberMe }, { expiresIn: '5000' })
-         // const renewedToken = services.signToken({ _id, rememberMe }, { expiresIn: rememberMe ? '7d' : '24h' })
+         const renewedToken = services.signToken({ _id, rememberMe }, { expiresIn: rememberMe ? '7d' : '24h' })
          const foundUserCopy = Object.assign({}, foundUser._doc)
          delete foundUserCopy.password
          // Send the response
@@ -68,8 +67,7 @@ module.exports = {
          if (!foundUser || !hashesMatch) return res.status(422).send(responseError('wrong-info', 'Wrong email or password'))
          const token = services.signToken(
             { _id: foundUser._id, rememberMe },
-            { expiresIn: process.env.NODE_ENV === 'development' ? '365d' : '5000' }
-            // { expiresIn: process.env.NODE_ENV === 'development' ? '365d' : rememberMe ? '7d' : '24h' }
+            { expiresIn: process.env.NODE_ENV === 'development' ? '365d' : rememberMe ? '7d' : '24h' }
          )
          const foundUserCopy = Object.assign({}, foundUser._doc)
          delete foundUserCopy.password
