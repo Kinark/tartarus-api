@@ -120,8 +120,7 @@ io.on('connection', socket => {
 
          worldsUserIsIn.forEach(world => {
             socket.broadcast.to(world._id).emit('leaving-player', foundUser._id)
-         });
-         
+         })
       } catch (err) {
          console.log(err.message)
       }
@@ -141,29 +140,43 @@ server.listen(port, () => console.log(`Example app listening on port ${port}!`))
 
 const disconnectEveryoneFromEverything = require('./tasks/disconnectEveryoneFromEverything')
 
-const gracefulShutdown = async cb => {
-   console.log('Received kill signal, shutting down gracefully')
-   await disconnectEveryoneFromEverything()
-   server.close(() => {
+const gracefulShutdown = async (finalKillMsg, cb) => {
+   const shutdownTimeout = setTimeout(() => {
+      console.error('Could not close connections in time, forcefully shutting down')
+      process.exit(1)
+   }, 5000)
+
+   try {
+      console.log('Received kill signal, shutting down gracefully')
+      await disconnectEveryoneFromEverything()
+      await server.close()
       console.log('Closed out remaining connections')
-   })
-   db.connection.close(function() {
+      await db.connection.close()
       console.log('Mongoose default connection disconnected through app termination')
-   })
-
-   // setTimeout(() => {
-   //    console.error('Could not close connections in time, forcefully shutting down')
-   //    throw new Error(0)
-   // }, 10000)
-
-   if (typeof cb === 'function') cb()
-   process.exit(0)
+      console.log(`Type of termination: ${finalKillMsg}`)
+      clearTimeout(shutdownTimeout)
+      cb()
+   } catch (error) {
+      console.error(error, 'Error during stop.')
+      process.exit(1)
+   }
 }
 
+// For nodemon restarts
 process.once('SIGUSR2', () => {
-   gracefulShutdown(() => {
+   gracefulShutdown('Nodemon restart', () => {
       process.kill(process.pid, 'SIGUSR2')
    })
 })
-process.on('SIGTERM', gracefulShutdown)
-process.on('SIGINT', gracefulShutdown)
+// For app termination
+process.once('SIGINT', () => {
+   gracefulShutdown('App termination', () => {
+      process.kill(process.pid, 'SIGINT')
+   })
+})
+// For Heroku app termination
+process.once('SIGTERM', () => {
+   gracefulShutdown('Heroku app termination', () => {
+      process.kill(process.pid, 'SIGTERM')
+   })
+})
