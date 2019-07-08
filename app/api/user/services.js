@@ -65,7 +65,13 @@ module.exports = {
     * @param {string} token
     * @returns {Object} - Decoded token
     */
-   decodeToken: token => jwt.verify(token, process.env.JWT_SECRET),
+   decodeToken: token => {
+      try {
+         return jwt.verify(token, process.env.JWT_SECRET)
+      } catch (err) {
+         return false
+      }
+   },
 
    /**
     * Fetch a user by it's _id
