@@ -6,5 +6,5 @@ module.exports = {
       return newMessage.save()
    },
 
-   fetchByRoom: room =>  Message.find({ room })
+   fetchByRoom: room => Message.find({ room }).populate('author', 'name')
 }
