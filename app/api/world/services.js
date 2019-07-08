@@ -33,6 +33,16 @@ module.exports = {
          .limit(limit),
 
    /**
+    * Search for active members in a world
+    * @param {string} world - The world id to look for the active members
+    * @returns {Promise}
+    */
+   fetchActiveMembers: world =>
+      World.findById(world, 'activeMembers')
+         .populate('activeMembers')
+         .lean(),
+
+   /**
     * Fetch a worlds by owner
     * @param {string} owner - The owner's _id
     * @returns {Promise}
