@@ -7,6 +7,7 @@ module.exports = {
       if (!token) return res.status(401).send(responseError('must-login', 'You must login first.'))
       try {
          const decoded = services.decodeToken(token)
+         if (!decoded) return res.status(401).send(responseError('invalid-token', 'Invalid or expired token'))
          req.token = decoded
       } catch (error) {
          return res.status(401).send(responseError('invalid-token', 'Invalid or expired token sent.'))
