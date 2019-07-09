@@ -26,11 +26,13 @@ module.exports = {
       dices.forEach(dice => {
          const dicesAmount = dice[0]
          const diceType = dice[1]
+         let multipleDicesSum = ''
          for (let index = 0; index < dicesAmount; index++) {
             const diceResult = Math.floor(Math.random() * diceType + 1)
-            sumDetails.push(diceResult)
+            multipleDicesSum += `${diceResult}, `
             result += diceResult
          }
+         sumDetails.push(multipleDicesSum.substring(0, multipleDicesSum.length - 2))
       })
 
       req.body.content = result
