@@ -1,8 +1,8 @@
 const Message = require('./model')
 
 module.exports = {
-   newMessage: async ({ author, content, room, type, subRoom, timestamp, nonce }) => {
-      const newMessage = new Message({ author, content, room, type, subRoom, timestamp, nonce })
+   newMessage: async data => {
+      const newMessage = new Message(data)
       const savedMessage = await newMessage.save()
       return Message.populate(savedMessage, { path: 'author', select: 'name' })
    },

@@ -8,7 +8,9 @@ const MessageSchema = new mongoose.Schema({
    type: { type: String, required: true, enum: ['adventure', 'talk'] },
    subRoom: { type: String, trim: true },
    timestamp: { type: Date, required: true },
-   nonce: { type: String, required: true }
+   nonce: { type: String, required: true },
+   dices: [String],
+   dicesResults: [String]
 })
 
 const Message = mongoose.model('Message', MessageSchema)
