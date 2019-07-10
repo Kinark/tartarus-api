@@ -119,7 +119,7 @@ io.on('connection', socket => {
          const worldsUserIsIn = await worldServices.fetchWorlds({ activeMembers: foundUser._id }, 0, 1000)
 
          await userServices.modifyUser(foundUser._id, { currentSocket: null })
-         await worldServices.modifyWorlds({ activeMembers: foundUser._id }, { $pull: { activeMembers: foundUser._id } })
+         await worldServices.modifyWorlds({ 'members.user': foundUser._id }, { 'members.$.online': false })
 
          worldsUserIsIn.forEach(world => {
             socket.broadcast.to(world._id).emit('leaving-player', { player: foundUser._id, room: world._id })

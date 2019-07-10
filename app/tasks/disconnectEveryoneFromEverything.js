@@ -3,7 +3,7 @@ const updateWorlds = require('~/app/api/world/services').modifyWorlds
 
 const disconnectEveryoneFromEverything = async () => {
    await updateUsers({ currentSocket: { $ne: null } }, { currentSocket: null })
-   await updateWorlds({ activeMembers: { $ne: [] } }, { activeMembers: [] })
+   await updateWorlds({ 'members.online': true }, { 'members.$.online': false })
    console.log('Everyone was disconnected from everything')
 }
 
