@@ -116,7 +116,7 @@ io.on('connection', socket => {
       console.log(`The socket ${socket.id} disconnected`)
       try {
          const foundUser = await userServices.findUser({ currentSocket: socket.id })
-         const worldsUserIsIn = await worldServices.fetchWorlds({ activeMembers: foundUser._id }, 0, 1000)
+         const worldsUserIsIn = await worldServices.fetchWorlds({ 'members.user': foundUser._id }, 0, 1000)
 
          await userServices.modifyUser(foundUser._id, { currentSocket: null })
          await worldServices.modifyWorlds({ 'members.user': foundUser._id }, { 'members.$.online': false })
