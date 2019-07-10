@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt')
+const World = require('./model')
+const userServices = require('../user/services')
 const services = require('./services')
 const responseError = require('~/app/responseError')
+const io = require('~/app/server').io
 
 module.exports = {
    /**
@@ -25,11 +28,11 @@ module.exports = {
     */
    getMyWorlds: async ({ token }, res) => {
       try {
-         const myWorlds = await services.fetchWorldsByOwner(token._id)
+         const myWorlds = await services.fetchWorlds({ owner: token._id })
 
          const modifiedMyWorlds = myWorlds.map(world => {
             const newWorld = { ...world._doc }
-            newWorld.locked = !!newWorld.password && !world.members.includes(token._id)
+            newWorld.locked = !!newWorld.password && !world.members.some(member => member.user._id.toString() === token._id)
             delete newWorld.password
             return newWorld
          })
@@ -47,11 +50,11 @@ module.exports = {
     */
    getWhereILive: async ({ token }, res) => {
       try {
-         const worldsWhereILive = await services.fetchWorlds({ owner: { $ne: token._id }, members: token._id })
+         const worldsWhereILive = await services.fetchWorlds({ owner: { $ne: token._id }, 'members.user': token._id })
 
          const modifiedMyWorlds = worldsWhereILive.map(world => {
             const newWorld = { ...world._doc }
-            newWorld.locked = !!newWorld.password && !world.members.includes(token._id)
+            newWorld.locked = !!newWorld.password && !world.members.some(member => member.user._id.toString() === token._id)
             delete newWorld.password
             return newWorld
          })
@@ -115,7 +118,7 @@ module.exports = {
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
          const copyWorld = Object.assign({ locked: false }, foundWorld._doc)
-         copyWorld.locked = !!copyWorld.password && !copyWorld.members.includes(token._id)
+         copyWorld.locked = !!copyWorld.password && !copyWorld.members.some(member => member.user._id.toString() === token._id)
          delete copyWorld.password
          res.status(200).send(copyWorld)
       } catch (err) {
@@ -128,48 +131,31 @@ module.exports = {
     * @param {object} req - req object from express.
     * @param {object} res - res object from express.
     */
-   getActiveMembersFromWorld: async ({ token, params: { _id } }, res) => {
-      if (!_id) return res.status(400).send(responseError('missing-info', 'Missing information.'))
-      try {
-         const foundWorld = await services.fetchWorld(_id)
-         if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
-
-         if (!foundWorld.members.includes(token._id) && foundWorld.owner !== token._id) {
-            return res.status(403).send(responseError('not-in-world', 'You are not in this world.'))
-         }
-
-         let { activeMembers } = await services.fetchActiveMembers(_id)
-
-         activeMembers = activeMembers.map(member => {
-            member.room = _id
-            return member
-         })
-
-         res.status(200).send(activeMembers)
-      } catch (err) {
-         return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
-      }
-   },
-
-   /**
-    * Join a world controller
-    * @param {object} req - req object from express.
-    * @param {object} res - res object from express.
-    */
    joinWorld: async ({ token, body: { _id, password } }, res) => {
       if (!_id) return res.status(400).send(responseError('missing-info', 'Missing information.'))
+      const { currentSocket } = await userServices.findUserById(token._id)
       try {
          const foundWorld = await services.fetchWorld(_id)
+         // const foundUser = await User.findById(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
 
-         if (!foundWorld.members.includes(token._id) && foundWorld.owner !== token._id) {
+         if (!foundWorld.members.some(member => member.user._id.toString() === token._id) && foundWorld.owner !== token._id) {
             if (foundWorld.password) {
                if (!password) return res.status(400).send(responseError('missing-password', 'This world is locked and the password is missing.'))
                const passwordsMatch = await bcrypt.compare(password, foundWorld.password)
                if (!passwordsMatch) return res.status(422).send(responseError('wrong-password', 'This world is locked and the password is wrong.'))
             }
-            const toBeUpdated = { $push: { members: token._id } }
-            await services.modifyWorld(_id, toBeUpdated)
+
+            const savedFoundWorld = await World.findOneAndUpdate({ _id }, { $push: { members: { user: token._id } } }, { new: true })
+            const populatedSavedFoundWorld = await World.populate(savedFoundWorld, { path: 'members.user', select: '-password -email' })
+            const newPlayer = { player: populatedSavedFoundWorld.members.find(({ user }) => user._id.toString() === token._id), room: _id }
+
+            console.log(currentSocket)
+            if (currentSocket) {
+               io.sockets.connected[currentSocket].broadcast.to(_id).emit('new-player', newPlayer)
+            } else {
+               io.to(_id).emit('new-player', newPlayer)
+            }
          }
 
          res.sendStatus(200)
@@ -185,14 +171,27 @@ module.exports = {
     */
    leaveWorld: async ({ token, body: { _id } }, res) => {
       if (!_id) return res.status(400).send(responseError('missing-info', 'Missing information.'))
+      const { currentSocket } = await userServices.findUserById(token._id)
       try {
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
-         if (!foundWorld.members.includes(token._id)) return res.status(400).send(responseError('not-in-world', 'You are not in this world.'))
+         if (!foundWorld.members.some(member => member.user._id.toString() === token._id)) {
+            return res.status(400).send(responseError('not-in-world', 'You are not in this world.'))
+         }
          if (token._id === foundWorld.owner.toString()) return res.status(409).send(responseError('owner-cannot-leave', "You can't leave your own world."))
 
-         const toBeUpdated = { $pull: { members: token._id } }
-         await services.modifyWorld(_id, toBeUpdated)
+         const subdocumentId = foundWorld.members.find(member => member.user._id.toString() === token._id)._id
+         foundWorld.members.id(subdocumentId).remove()
+         await foundWorld.save()
+
+         const quittingPlayer = { room: _id, player: token._id }
+
+         console.log(currentSocket)
+         if (currentSocket) {
+            io.sockets.connected[currentSocket].broadcast.to(_id).emit('quitting-player', quittingPlayer)
+         } else {
+            io.to(_id).emit('quitting-player', quittingPlayer)
+         }
 
          res.sendStatus(200)
       } catch (err) {
@@ -211,7 +210,7 @@ module.exports = {
 
          const modifiedFoundWorlds = foundWorlds.map(world => {
             const newWorld = { ...world._doc }
-            newWorld.locked = !!newWorld.password && !world.members.includes(token._id)
+            newWorld.locked = !!newWorld.password && !world.members.some(member => member.user._id.toString() === token._id)
             delete newWorld.password
             return newWorld
          })

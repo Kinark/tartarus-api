@@ -70,21 +70,22 @@ io.on('connection', socket => {
    socket.on('enter-room', async roomId => {
       const foundWorld = await worldServices.fetchWorld(roomId)
       const user = await userServices.findUser({ currentSocket: socket.id })
-      const userId = user._id
+      const userId = user._id.toString()
 
-      // if (!foundWorld) {return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))}
       if (!foundWorld) return console.log(responseError('world-not-found', 'The world was not found.'))
-      // if (!foundWorld.members.includes(userId)) return socket.emit('oops', responseError('not-a-member', 'You are not in this world.'))
-      if (!foundWorld.members.includes(userId)) return console.log('oops', responseError('not-a-member', 'You are not in this world.'))
+      if (!foundWorld.members.some(member => member.user._id.toString() === userId)) {
+         return console.log(responseError('not-a-member', 'You are not in this world.'))
+      }
 
-      await worldServices.modifyWorld(roomId, { $push: { activeMembers: userId } })
+      const subdocumentId = foundWorld.members.find(member => member.user._id.toString() === userId)._id
+      foundWorld.members.id(subdocumentId).online = true
+      await foundWorld.save()
 
       const privateUser = Object.assign({}, user._doc)
       delete privateUser.password
       delete privateUser.email
-      privateUser.room = roomId
 
-      socket.broadcast.to(roomId).emit('joining-player', privateUser)
+      socket.broadcast.to(roomId).emit('joining-player', { player: userId, room: roomId })
 
       console.log(`The socket ${socket.id} joined the room ${roomId}`)
       return socket.join(roomId)
@@ -94,13 +95,15 @@ io.on('connection', socket => {
       try {
          const foundWorld = await worldServices.fetchWorld(roomId)
          const user = await userServices.findUser({ currentSocket: socket.id })
-         const userId = user._id
+         const userId = user._id.toString()
 
          if (!foundWorld) return socket.emit('oops', responseError('world-not-found', 'The world was not found.'))
 
-         await worldServices.modifyWorld(roomId, { $pull: { activeMembers: userId } })
+         const subdocumentId = foundWorld.members.find(member => member.user._id.toString() === userId)._id
+         foundWorld.members.id(subdocumentId).online = false
+         await foundWorld.save()
 
-         socket.broadcast.to(roomId).emit('leaving-player', userId)
+         socket.broadcast.to(roomId).emit('leaving-player', { player: userId, room: roomId })
 
          console.log(`The socket ${socket.id} left the room ${roomId}`)
          return socket.leave(roomId)
@@ -119,7 +122,7 @@ io.on('connection', socket => {
          await worldServices.modifyWorlds({ activeMembers: foundUser._id }, { $pull: { activeMembers: foundUser._id } })
 
          worldsUserIsIn.forEach(world => {
-            socket.broadcast.to(world._id).emit('leaving-player', foundUser._id)
+            socket.broadcast.to(world._id).emit('leaving-player', { player: foundUser._id, room: world._id })
          })
       } catch (err) {
          console.log(err.message)

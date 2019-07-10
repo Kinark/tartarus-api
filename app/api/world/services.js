@@ -11,7 +11,7 @@ module.exports = {
     * @returns {object}
     */
    newWorld: ({ owner, name, ruleset = null, description, cover = '', password, tags }) => {
-      const newWorld = new World({ owner, name, description, ruleset, members: [owner], cover, password, tags, createdAt: new Date() })
+      const newWorld = new World({ owner, name, description, ruleset, members: [{ user: owner }], cover, password, tags, createdAt: new Date() })
       return newWorld.save()
    },
 
@@ -20,7 +20,7 @@ module.exports = {
     * @param {string} _id - The world's _id
     * @returns {Promise}
     */
-   fetchWorld: _id => World.findById(_id),
+   fetchWorld: _id => World.findById(_id).populate('members.user', '-password -email'),
 
    /**
     * Search for worlds
@@ -30,24 +30,8 @@ module.exports = {
    fetchWorlds: (query, skip = 0, limit = 50) =>
       World.find(query)
          .skip(skip)
+         .populate('members.user', '-password -email')
          .limit(limit),
-
-   /**
-    * Search for active members in a world
-    * @param {string} world - The world id to look for the active members
-    * @returns {Promise}
-    */
-   fetchActiveMembers: world =>
-      World.findById(world, 'activeMembers')
-         .populate('activeMembers')
-         .lean(),
-
-   /**
-    * Fetch a worlds by owner
-    * @param {string} owner - The owner's _id
-    * @returns {Promise}
-    */
-   fetchWorldsByOwner: owner => World.find({ owner }),
 
    joinWorld: (memberId, worldId) => World.findByIdAndUpdate(worldId, { $push: { members: memberId } }),
 

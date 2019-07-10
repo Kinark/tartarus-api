@@ -13,6 +13,5 @@ app.get('/where-i-live', authMiddlewares.authAndDecode, controller.getWhereILive
 app.patch('/join-world', authMiddlewares.authAndDecode, controller.joinWorld)
 app.patch('/leave-world', authMiddlewares.authAndDecode, controller.leaveWorld)
 app.post('/search-worlds', authMiddlewares.authAndDecode, controller.searchWorlds)
-app.get('/get-active-members-from-world/:_id', authMiddlewares.authAndDecode, controller.getActiveMembersFromWorld)
 
 // app.get('/world', authMiddlewares.reqWithJwt, controller.getMessages)
