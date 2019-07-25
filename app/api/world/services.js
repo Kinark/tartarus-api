@@ -20,7 +20,7 @@ module.exports = {
     * @param {string} _id - The world's _id
     * @returns {Promise}
     */
-   fetchWorld: _id => World.findById(_id).populate('members.user', '-password -email'),
+   fetchWorld: _id => World.findById(_id).populate('members.user', '-password -email').populate('members.character.ruleset'),
 
    /**
     * Search for worlds

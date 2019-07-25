@@ -219,5 +219,27 @@ module.exports = {
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
+   },
+
+   /**
+    * Search worlds controller
+    * @param {object} req - req object from express.
+    * @param {object} res - res object from express.
+    */
+   giveSheet: async ({ token, body: { user, rulesetId }, params: { _id } }, res) => {
+      try {
+         const foundWorld = await services.fetchWorld(_id)
+         if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
+         if (token._id !== foundWorld.owner.toString()) return res.status(403).send(responseError('not-owner', 'You are not the owner of the world.'))
+
+         const newCharacter = { name: '', ruleset: rulesetId, sheetInputs: [] }
+
+         foundWorld.members.find(member => member.user.toString() === user).characters.push(newCharacter)
+         await foundWorld.save()
+
+         res.status(200).send()
+      } catch (err) {
+         return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
+      }
    }
 }

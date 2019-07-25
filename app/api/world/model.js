@@ -4,9 +4,21 @@ const ObjectId = mongoose.Schema.Types.ObjectId
 
 const Message = require('../message/model')
 
+const SheetInputSchema = new mongoose.Schema({
+   nonceModel: { type: Number, required: true },
+   content: String,
+})
+
+const CharacterSchema = new mongoose.Schema({
+   name: { type: String, required: true },
+   ruleset: { type: ObjectId, required: true, ref: 'Ruleset' },
+   sheetInputs: [SheetInputSchema],
+})
+
 const MemberSchema = new mongoose.Schema({
    user: { type: ObjectId, required: true, ref: 'User' },
-   online: { type: Boolean, default: false }
+   online: { type: Boolean, default: false },
+   characters: [CharacterSchema]
 })
 
 const WorldSchema = new mongoose.Schema({

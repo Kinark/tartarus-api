@@ -41,6 +41,7 @@ app.get('/', (req, res) => res.send('Hello World!'))
 app.use(require('./api/user/routes'))
 app.use(require('./api/world/routes'))
 app.use(require('./api/message/routes'))
+app.use(require('./api/ruleset/routes'))
 
 app.all('*', (req, res) => res.status(404).send({ msg: 'not found' }))
 
@@ -67,7 +68,7 @@ io.on('connection', socket => {
       }
    })
 
-   socket.on('enter-room', async roomId => {
+   socket.on('enter-room', async (roomId, cb) => {
       const foundWorld = await worldServices.fetchWorld(roomId)
       const user = await userServices.findUser({ currentSocket: socket.id })
       const userId = user._id.toString()
@@ -86,6 +87,8 @@ io.on('connection', socket => {
       delete privateUser.email
 
       socket.broadcast.to(roomId).emit('joining-player', { player: userId, room: roomId })
+
+      if (cb) cb()
 
       console.log(`The socket ${socket.id} joined the room ${roomId}`)
       return socket.join(roomId)

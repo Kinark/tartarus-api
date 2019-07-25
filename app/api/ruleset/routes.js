@@ -2,16 +2,10 @@ const app = (module.exports = require('express')())
 const authMiddlewares = require('~/app/api/user/middlewares')
 const controller = require('./controller')
 
-app.post('/world', authMiddlewares.authAndDecode, controller.createNewWorld)
-app.patch('/world', authMiddlewares.authAndDecode, controller.updateWorld)
-app.get('/world/:_id', authMiddlewares.authAndDecode, controller.getWorld)
-app.delete('/world', authMiddlewares.authAndDecode, controller.deleteWorld)
+app.post('/ruleset', authMiddlewares.authAndDecode, controller.createNewRuleset)
+app.get('/ruleset/:_id', authMiddlewares.authAndDecode, controller.getRuleset)
+app.patch('/ruleset/:_id', authMiddlewares.authAndDecode, controller.updateRuleset)
 
-app.get('/my-worlds', authMiddlewares.authAndDecode, controller.getMyWorlds)
-app.get('/where-i-live', authMiddlewares.authAndDecode, controller.getWhereILive)
-
-app.patch('/join-world', authMiddlewares.authAndDecode, controller.joinWorld)
-app.patch('/leave-world', authMiddlewares.authAndDecode, controller.leaveWorld)
-app.post('/search-worlds', authMiddlewares.authAndDecode, controller.searchWorlds)
+app.get('/my-rulesets', authMiddlewares.authAndDecode, controller.getMyRulesets)
 
 // app.get('/world', authMiddlewares.reqWithJwt, controller.getMessages)
