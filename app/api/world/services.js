@@ -31,6 +31,7 @@ module.exports = {
       World.find(query)
          .skip(skip)
          .populate('members.user', '-password -email')
+         .populate('members.characters.ruleset')
          .limit(limit),
 
    joinWorld: (memberId, worldId) => World.findByIdAndUpdate(worldId, { $push: { members: memberId } }),
