@@ -186,7 +186,6 @@ module.exports = {
 
          const quittingPlayer = { room: _id, player: token._id }
 
-         console.log(currentSocket)
          if (currentSocket) {
             io.sockets.connected[currentSocket].broadcast.to(_id).emit('quitting-player', quittingPlayer)
          } else {
@@ -226,18 +225,25 @@ module.exports = {
     * @param {object} req - req object from express.
     * @param {object} res - res object from express.
     */
-   giveSheet: async ({ token, body: { user, rulesetId }, params: { _id } }, res) => {
+   giveSheet: async ({ token, body: { playerId, rulesetId, type }, params: { _id } }, res) => {
       try {
+         console.log(playerId)
          const foundWorld = await services.fetchWorld(_id)
          if (!foundWorld) return res.status(404).send(responseError('world-not-found', 'World was not found.'))
          if (token._id !== foundWorld.owner.toString()) return res.status(403).send(responseError('not-owner', 'You are not the owner of the world.'))
 
-         const newCharacter = { name: '', ruleset: rulesetId, sheetInputs: [] }
+         const newCharacter = { name: 'Nova ficha', ruleset: rulesetId, type, sheetInputs: [] }
 
-         foundWorld.members.find(member => member.user.toString() === user).characters.push(newCharacter)
-         await foundWorld.save()
+         const doc = await World.findOneAndUpdate(
+            { _id, 'members.user': playerId },
+            { $push: { 'members.$.characters': newCharacter } },
+            { new: true }
+         ).populate('members.user', '-password -email')
+         const updatedMember = doc.members.find(member => member.user._id.toString() === playerId)
 
-         res.status(200).send()
+         io.to(_id).emit('updated-member', { room: _id, updatedMember })
+
+         res.status(200).send(doc)
       } catch (err) {
          return res.status(400).send(responseError('something-wrong', 'Something went wrong.', err.message))
       }
